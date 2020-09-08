@@ -1,8 +1,3 @@
-
-# my first shopping code
-=======
-# shopping
-
 ## Project setup
 ```
 npm install
