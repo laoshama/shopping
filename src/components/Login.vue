@@ -43,27 +43,42 @@ export default {
         ],
         password: [
           { required: true, message: '请输入密码！', trigger: 'blur' },
-          { min: 8, max: 15, message: '长度在 8 到 15 个字符', trigger: 'blur' }
+          { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
         ]
       }
     }
   },
   methods: {
-    //  登入功能按钮
+    //  登入处理
     login_up () {
-      //  验证到数据是否符合规则
-      this.$refs.loginFormRef.validate((flag) => {
-        if (flag) {
-          // 发送请求
+      this.$refs.loginFormRef.validate(async (flag) => {
+        if (!flag) {
+          this.$message.error('错误请重新输入')
+          return true
         } else {
-          // 显示错误信息
-          alert('错误!  请重新输入!')
+          // 发送请求(使用axios)
+          const { data: res } = await this.$http.post('login', this.loginForm)
+          if (res.meta.status === 200) {
+            this.$message({
+              message: res.meta.msg,
+              type: 'success'
+            })
+            // 存储token值
+            window.sessionStorage.setItem('token', res.data.token)
+
+            // 跳转管理到主页
+            this.$router.push('home')
+          } else {
+            this.$message({
+              message: res.meta.msg,
+              type: 'error'
+            })
+          }
         }
       })
     },
     //  重置表单
     login_reset () {
-      //  $refs可以拿到所有绑定在ref对象上的属性
       this.$refs.loginFormRef.resetFields()
     }
   }
