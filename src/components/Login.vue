@@ -1,5 +1,7 @@
 <template>
+  <div class="login_box">
 
+  </div>
 </template>
 
 <script>
@@ -8,6 +10,8 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+  .login_box {
 
+  }
 </style>
