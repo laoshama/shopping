@@ -67,7 +67,7 @@ export default {
             window.sessionStorage.setItem('token', res.data.token)
 
             // 跳转管理到主页
-            this.$router.push('home')
+            this.$router.push('/home')
           } else {
             this.$message({
               message: res.meta.msg,
