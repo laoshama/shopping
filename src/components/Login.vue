@@ -6,7 +6,8 @@
       </div>
       <div class="login_form_inputMSG">
         <!--登入表单-->
-        <el-form label-width="80px" :model="loginForm" :rules="loginRules" ref="loginFormRef">
+        <el-form label-width="80px" :model="loginForm" :rules="loginRules" ref="loginFormRef"
+                 @keyup.enter.native="login_up">
           <el-form-item prop="username">
             <el-input v-model="loginForm.username" prefix-icon="el-icon-user" placeholder="请输入账号"></el-input>
           </el-form-item>
@@ -38,11 +39,11 @@ export default {
       //  表单验证规则
       loginRules: {
         username: [
-          { required: true, message: '请输入用户名！', trigger: 'blur' },
+          { required: true, message: '用户名错误！请重新输入！', trigger: 'blur' },
           { min: 3, max: 15, message: '长度在 3 到 15 个字符', trigger: 'blur' }
         ],
         password: [
-          { required: true, message: '请输入密码！', trigger: 'blur' },
+          { required: true, message: '密码错误！请重新输入！！', trigger: 'blur' },
           { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
         ]
       }
@@ -51,9 +52,21 @@ export default {
   methods: {
     //  登入处理
     login_up () {
-      this.$refs.loginFormRef.validate(async (flag) => {
+      this.$refs.loginFormRef.validate(async (flag, msg) => {
         if (!flag) {
-          this.$message.error('错误请重新输入')
+          const { password: pMsg, username: uMsg } = msg
+          if (pMsg && uMsg) {
+            this.$message.error('账号和密码错误！请重新输入！')
+            this.$refs.loginFormRef.resetFields()
+          } else {
+            if (pMsg) {
+              this.$message.error('密码错误！请重新输入！')
+              this.loginForm.password = ''
+            } else if (uMsg) {
+              this.$message.error('账号错误！请重新输入！')
+              this.loginForm.username = ''
+            }
+          }
           return true
         } else {
           // 发送请求(使用axios)
@@ -69,10 +82,17 @@ export default {
             // 跳转管理到主页
             this.$router.push('/home')
           } else {
+            //  请求失败时
             this.$message({
               message: res.meta.msg,
               type: 'error'
             })
+            console.log(/密码/.test(res.meta.msg))
+            if (/密码/.test(res.meta.msg)) {
+              this.loginForm.password = ''
+            } else {
+              this.loginForm.username = ''
+            }
           }
         }
       })

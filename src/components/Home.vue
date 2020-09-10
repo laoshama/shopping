@@ -12,17 +12,19 @@
     <el-container>
       <!--侧边栏-->
       <el-aside width="200px">
-        <el-menu
-          v-for="(menu) in menuList" :key="menu.id"
-          default-active="2" background-color="#545c64" text-color="#fff" class="el-menu-vertical-demo">
-          <el-submenu index="1">
+        <el-menu default-active="2" background-color="#373d41" text-color="#fff" class="el-menu-vertical-demo"
+                 unique-opened>
+          <!--循环生成一级菜单-->
+          <el-submenu :index="menu.id.toString()" v-for="(menu) in menuList" :key="menu.id">
             <template slot="title">
-              <i class="el-icon-location"></i>
+              <i :class="iconsObj[menu.id]"></i>
               <span>{{ menu.authName }}</span>
             </template>
             <template>
-              <el-menu-item index="1-1" v-for="(child_menu) in menu.children" :key="child_menu.id">
-                <i class="el-icon-location"></i>
+              <!--循环生成二级菜单-->
+              <el-menu-item :index="menu.order + '-' + idx" v-for="(child_menu, idx) in menu.children"
+                            :key="child_menu.id">
+                <i class="el-icon-menu"></i>
                 <span>{{ child_menu.authName }}</span>
               </el-menu-item>
             </template>
@@ -41,7 +43,14 @@ export default {
   data () {
     return {
       //  侧边栏菜单数据
-      menuList: []
+      menuList: [],
+      iconsObj: {
+        125: 'el-icon-s-custom',
+        103: 'el-icon-s-opportunity',
+        101: 'el-icon-goods',
+        102: 'el-icon-thumb',
+        145: 'el-icon-s-data'
+      }
     }
   },
   //  在创建完实例后就发送请求
@@ -62,6 +71,7 @@ export default {
       const { data: res } = await this.$http.get('menus')
       if (res.meta.status !== 200) return this.$message.error('信息获取失败！')
       this.menuList = res.data
+      console.log(await this.$http.get('menus'))
     }
   }
 }
@@ -91,6 +101,7 @@ export default {
       span{
         margin-left: 30px;
         color: #dddddd;
+        font-weight: 500;
       }
     }
 
@@ -102,13 +113,22 @@ export default {
 
   .el-aside {
     background-color: #333744;
-    .el-submenu {
-      width: 200px;
+
+    .el-menu {
+      border-right: none;
+
+      .el-menu-item {
+        background-color: peru !important;
+      }
+
+      .el-menu-item.is-active {
+        color: #6681FA !important;
+        background-color: #EAEEFF!important;
+      }
     }
   }
 
   .el-main {
     background-color: #eaedc1;
   }
-
 </style>
