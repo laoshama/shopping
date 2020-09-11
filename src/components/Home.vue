@@ -4,25 +4,27 @@
     <el-header>
       <div class="header_left">
         <img class="header_logo" src="../assets/logo.png" alt="logo">
-        <span>某某公司电商后台管理</span>
+        <span>某某公司电商后台管理系统</span>
       </div>
       <el-button type="info" round @click="logout">退出系统</el-button>
     </el-header>
     <!--主体区域-->
     <el-container>
       <!--侧边栏-->
-      <el-aside width="200px">
+      <el-aside :width="isCollapse ? '64px' : '200px'">
+        <div class="aside_toggleBtn" :collaspase="isCollapse" @click="toggleCollaspase">|||</div>
         <el-menu default-active="2" background-color="#373d41" text-color="#fff" class="el-menu-vertical-demo"
-                 unique-opened>
+                 unique-opened :collapse="isCollapse"
+                 :collapse-transition="false" router>
           <!--循环生成一级菜单-->
-          <el-submenu :index="menu.id.toString()" v-for="(menu) in menuList" :key="menu.id">
+          <el-submenu :index="menu.path + ''" v-for="menu in menuList" :key="menu.id">
             <template slot="title">
               <i :class="iconsObj[menu.id]"></i>
               <span>{{ menu.authName }}</span>
             </template>
             <template>
               <!--循环生成二级菜单-->
-              <el-menu-item :index="menu.order + '-' + idx" v-for="(child_menu, idx) in menu.children"
+              <el-menu-item :index="menu.path + '/' + child_menu.path" v-for="child_menu in menu.children"
                             :key="child_menu.id">
                 <i class="el-icon-menu"></i>
                 <span>{{ child_menu.authName }}</span>
@@ -32,7 +34,9 @@
         </el-menu>
       </el-aside>
       <!--右侧内容区-->
-      <el-main>Main</el-main>
+      <el-main>
+        <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
@@ -50,7 +54,9 @@ export default {
         101: 'el-icon-goods',
         102: 'el-icon-thumb',
         145: 'el-icon-s-data'
-      }
+      },
+      isCollapse: true,
+      aside_with: '64px'
     }
   },
   //  在创建完实例后就发送请求
@@ -71,7 +77,9 @@ export default {
       const { data: res } = await this.$http.get('menus')
       if (res.meta.status !== 200) return this.$message.error('信息获取失败！')
       this.menuList = res.data
-      console.log(await this.$http.get('menus'))
+    },
+    toggleCollaspase () {
+      this.isCollapse = !this.isCollapse
     }
   }
 }
@@ -114,6 +122,16 @@ export default {
   .el-aside {
     background-color: #333744;
 
+    .aside_toggleBtn {
+      background-color: #4a5064;
+      color: #fff;
+      text-align: center;
+      font-size: 10px;
+      cursor: pointer;
+      line-height: 24px;
+      letter-spacing: .2em;
+    }
+
     .el-menu {
       border-right: none;
 
@@ -129,6 +147,6 @@ export default {
   }
 
   .el-main {
-    background-color: #eaedc1;
+    background-color: #dddddd;
   }
 </style>
