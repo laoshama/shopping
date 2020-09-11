@@ -11,8 +11,10 @@
     <!--  搜索添加区域  -->
     <el-row :gutter="20">
       <el-col :span="8">
-        <el-input placeholder="请输入内容" prefix-icon="el-icon-search" v-model="search">
-          <el-button slot="append" icon="el-icon-search"></el-button>
+        <el-input  @keyup.enter.native="getUsersList" @clear="getUsersList" placeholder="请输入用户名" clearable
+                   prefix-icon="el-icon-search"
+                   v-model="queryInfo.query">
+          <el-button slot="append" icon="el-icon-search" @click="getUsersList"></el-button>
         </el-input>
       </el-col>
       <el-col :span="4">
@@ -28,7 +30,7 @@
       <el-table-column property="role_name" label="角色"></el-table-column>
       <el-table-column property="mg_state" label="状态">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state"></el-switch>
+          <el-switch v-model="scope.row.mg_state" @change="usersStateChange(scope.row)"></el-switch>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center">
@@ -66,6 +68,7 @@ export default {
     return {
       //  获取用户列表定义的参数对象,以便服务器按照页码和显示条数取数据
       queryInfo: {
+        //  查询条件
         query: '',
         //  当前页码
         pagenum: 1,
@@ -74,7 +77,6 @@ export default {
       },
       userList: [],
       total: 0,
-      search: '',
       value: true
     }
   },
@@ -96,6 +98,17 @@ export default {
     handleCurrentChange (newPage) {
       this.queryInfo.pagenum = newPage
       this.getUsersList()
+    },
+    //  监听用户状态改变
+    async usersStateChange (userInfo) {
+      // users/:uid/state/:type
+      const { data: res } = await this.$http.put(`users/${userInfo.id}/state/${userInfo.state}`)
+      if (res.meta.status !== 200) {
+        userInfo.state = !userInfo.state
+        this.$message.error('用户状态更新失败！')
+      } else {
+        this.$message.success('成功更新用户状态！')
+      }
     }
   }
 }
