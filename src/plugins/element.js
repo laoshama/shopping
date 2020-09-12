@@ -24,7 +24,8 @@ import
   TableColumn,
   Table,
   Switch,
-  Tooltip
+  Tooltip,
+  Dialog
 }
   from 'element-ui'
 
@@ -50,4 +51,5 @@ Vue.use(TableColumn)
 Vue.use(Table)
 Vue.use(Switch)
 Vue.use(Tooltip)
+Vue.use(Dialog)
 Vue.prototype.$message = Message

@@ -18,11 +18,33 @@
         </el-input>
       </el-col>
       <el-col :span="4">
-        <el-button type="primary">添加用户</el-button>
+        <!--添加用户区域-->
+        <el-button type="primary" @click="centerDialogVisible = true">添加用户</el-button>
+        <el-dialog title="添加用户" :visible.sync="centerDialogVisible" width="50%" center @close="addDialogClosed">
+          <el-form :model="addUsersForm" :rules="addUsersFormRules" label-width="100px" ref="addFormRef">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="addUsersForm.username" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="password" clearable>
+              <el-input v-model="addUsersForm.password" type="password" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="addUsersForm.email" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="电话" prop="mobile">
+              <el-input v-model="addUsersForm.mobile" clearable></el-input>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="centerDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="addUser">确 定</el-button>
+          </span>
+        </el-dialog>
       </el-col>
     </el-row>
     <!--  用户列表区域  -->
-    <el-table ref="singleTable" highlight-current-row style="width: 100%" :data="userList" border :header-cell-style="{textAlign: 'center'}">
+    <el-table ref="singleTable" highlight-current-row style="width: 80%" :data="userList" border
+              :header-cell-style="{textAlign: 'center'}">
       <el-table-column type="index" width="50" label="序号"></el-table-column>
       <el-table-column property="username" label="姓名"></el-table-column>
       <el-table-column property="email" label="邮箱"></el-table-column>
@@ -65,6 +87,14 @@
 export default {
   name: 'Users',
   data () {
+    // 自定义添加用户表单的验证手机号规则
+    const checkMobile = (rule, value, callback) => {
+      const regMobile = /^1[3456789]\d{9}$/
+      if (regMobile.test(value)) {
+        return callback()
+      }
+      callback(new Error('请输入合法手机号！'))
+    }
     return {
       //  获取用户列表定义的参数对象,以便服务器按照页码和显示条数取数据
       queryInfo: {
@@ -76,8 +106,34 @@ export default {
         pagesize: 5
       },
       userList: [],
+      addUsersForm: {
+        username: '',
+        email: '',
+        mobile: '',
+        password: ''
+      },
       total: 0,
-      value: true
+      value: true,
+      centerDialogVisible: false,
+      //  表单验证规则
+      addUsersFormRules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 5, max: 10, message: '长度在 5 到 10 个字符', trigger: 'blur' }
+        ],
+        email: [
+          { required: true, message: '请输入电子邮箱', trigger: 'blur' },
+          { min: 5, max: 10, message: '长度在 5 到 10 个字符', trigger: 'blur' }
+        ],
+        mobile: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { validator: checkMobile, trigger: 'blur' }
+        ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+        ]
+      }
     }
   },
   created () {
@@ -89,6 +145,7 @@ export default {
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.userList = res.data.users
       this.total = res.data.total
+      console.log(this.userList)
     },
     handleSizeChange (newSize) {
       this.queryInfo.pagesize = newSize
@@ -109,6 +166,25 @@ export default {
       } else {
         this.$message.success('成功更新用户状态！')
       }
+    },
+    //  监听添加用户对话框关闭
+    addDialogClosed () {
+      this.$refs.addFormRef.resetFields()
+    },
+    //  预校验添加用户表单
+    addUser () {
+      //  隐藏添加用户对话框
+      this.centerDialogVisible = false
+      this.$refs.addFormRef.validate(async (valid) => {
+        if (!valid) return
+        //  预校验通过 发送请求 post users 成功状态码201
+        const { data: res } = await this.$http.post('users', this.addUsersForm)
+        if (res.meta.status !== 201) {
+          return this.$message.error('添加用户失败')
+        }
+        this.$message.success('成功添加用户')
+        this.getUsersList()
+      })
     }
   }
 }
@@ -116,12 +192,16 @@ export default {
 
 <style lang="less" scoped>
   .el-table {
-    margin-top: 10px;
+    margin: 20px auto;
   }
 
   ::v-deep
   .el-table td,
   .el-table th {
     text-align: center;
+  }
+
+  ::v-deep .el-dialog__body {
+    width: 80% !important;
   }
 </style>
