@@ -18,30 +18,48 @@
         </el-input>
       </el-col>
       <el-col :span="4">
-        <!--添加用户区域-->
         <el-button type="primary" @click="centerDialogVisible = true">添加用户</el-button>
-        <el-dialog title="添加用户" :visible.sync="centerDialogVisible" width="50%" center @close="addDialogClosed">
-          <el-form :model="addUsersForm" :rules="addUsersFormRules" label-width="100px" ref="addFormRef">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="addUsersForm.username" clearable></el-input>
-            </el-form-item>
-            <el-form-item label="密码" prop="password" clearable>
-              <el-input v-model="addUsersForm.password" type="password" clearable></el-input>
-            </el-form-item>
-            <el-form-item label="邮箱" prop="email">
-              <el-input v-model="addUsersForm.email" clearable></el-input>
-            </el-form-item>
-            <el-form-item label="电话" prop="mobile">
-              <el-input v-model="addUsersForm.mobile" clearable></el-input>
-            </el-form-item>
-          </el-form>
-          <span slot="footer" class="dialog-footer">
-            <el-button @click="centerDialogVisible = false">取 消</el-button>
-            <el-button type="primary" @click="addUser">确 定</el-button>
-          </span>
-        </el-dialog>
       </el-col>
     </el-row>
+    <!--  添加用户对话框 -->
+    <el-dialog title="添加用户" :visible.sync="centerDialogVisible" width="50%" center @close="addDialogClosed">
+      <el-form :model="addUsersForm" :rules="addUsersFormRules" label-width="100px" ref="addFormRef">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="addUsersForm.username" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password" clearable>
+          <el-input v-model="addUsersForm.password" type="password" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="addUsersForm.email" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="电话" prop="mobile">
+          <el-input v-model="addUsersForm.mobile" clearable></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="centerDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addUser">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!--  修改用户对话框 -->
+    <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="50%" center>
+      <el-form :model="editUsersInfo" label-width="100px" ref="editFormRef" :rules="editFormRules">
+        <el-form-item label="用户名">
+          <el-input v-model="editUsersInfo.username" clearable disabled></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editUsersInfo.email" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="电话" prop="mobile">
+          <el-input v-model="editUsersInfo.mobile" clearable></el-input>
+        </el-form-item>
+      </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="editUser">确 定</el-button>
+        </span>
+    </el-dialog>
     <!--  用户列表区域  -->
     <el-table ref="singleTable" highlight-current-row style="width: 80%" :data="userList" border
               :header-cell-style="{textAlign: 'center'}">
@@ -56,9 +74,10 @@
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center">
-        <template>
+        <template slot-scope="operationScope">
           <el-tooltip effect="dark" content="编辑" placement="top" :enterable="false">
-            <el-button type="primary" icon="el-icon-edit" circle size="mini"></el-button>
+            <el-button type="primary" icon="el-icon-edit" circle size="mini"
+                       @click="showEditDialog(operationScope.row.id)"></el-button>
           </el-tooltip>
           <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
             <el-button type="primary" icon="el-icon-setting" circle size="mini"></el-button>
@@ -112,10 +131,13 @@ export default {
         mobile: '',
         password: ''
       },
+      //  修改表单数据对象
+      editUsersInfo: {},
       total: 0,
       value: true,
       centerDialogVisible: false,
-      //  表单验证规则
+      editDialogVisible: false,
+      //  添加表单验证规则
       addUsersFormRules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
@@ -133,6 +155,17 @@ export default {
           { required: true, message: '请输入密码', trigger: 'blur' },
           { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
         ]
+      },
+      //  修改用户表单验证规则
+      editFormRules: {
+        email: [
+          { required: true, message: '请输入电子邮箱', trigger: 'blur' },
+          { min: 5, max: 12, message: '长度在 5 到 10 个字符', trigger: 'blur' }
+        ],
+        mobile: [
+          { required: true, message: '请输入手机号', trigger: 'blur' },
+          { validator: checkMobile, trigger: 'blur' }
+        ]
       }
     }
   },
@@ -140,12 +173,12 @@ export default {
     this.getUsersList()
   },
   methods: {
+    //  定义发送获取数据请求函数
     async getUsersList () {
       const { data: res } = await this.$http.get('users', { params: this.queryInfo })
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
       this.userList = res.data.users
       this.total = res.data.total
-      console.log(this.userList)
     },
     handleSizeChange (newSize) {
       this.queryInfo.pagesize = newSize
@@ -183,6 +216,29 @@ export default {
           return this.$message.error('添加用户失败')
         }
         this.$message.success('成功添加用户')
+        this.getUsersList()
+      })
+    },
+    // 显示修改用户对话框
+    async showEditDialog (id) {
+      // 向服务器获取所需修改的用户数据
+      const { data: res } = await this.$http.get(`users/${id}`)
+      this.editUsersInfo = res.data
+      //  显示对话框
+      this.editDialogVisible = true
+    },
+    //  修改用户表单  校验
+    editUser () {
+      //  预校验
+      this.$refs.editFormRef.validate(async (valid) => {
+        if (!valid) return this.$message.error('数据格式不符合规则')
+        // 发送请求
+        const { data: res } = await this.$http.put(`users/${this.editUsersInfo.id}`, this.editUsersInfo)
+        if (res.meta.status !== 200) return this.$message.error('数据修改失败！')
+        this.$message.success('数据修改成功！')
+        // 关闭对话框
+        this.editDialogVisible = false
+        // 刷新用户列表显示的数据
         this.getUsersList()
       })
     }
