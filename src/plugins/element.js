@@ -25,7 +25,10 @@ import
   Table,
   Switch,
   Tooltip,
-  Dialog
+  Dialog,
+  MessageBox,
+  Select,
+  Option
 }
   from 'element-ui'
 
@@ -52,4 +55,7 @@ Vue.use(Table)
 Vue.use(Switch)
 Vue.use(Tooltip)
 Vue.use(Dialog)
+Vue.use(Select)
+Vue.use(Option)
 Vue.prototype.$message = Message
+Vue.prototype.$confirm = MessageBox.confirm
